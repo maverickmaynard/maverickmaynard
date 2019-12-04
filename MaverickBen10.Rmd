@@ -7,24 +7,113 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(dplyr)
+#library(ellipse)
+library(RColorBrewer)
+#library(lattice)
+#library(gplots)
+#library(ggfortify)
+#library(cluster)
+#library(scatterplot3d)
+library(readxl)
+library(ggridges)
+
+library(readr)
+
+df<-read_delim("State_Employee_Payroll_Data_Calendar_Year_2015_through_Present.tsv",   "\t", escape_double = FALSE, trim_ws = TRUE)
+#View(df)
+
+fdf<-subset(df, df$`Full/Part` == "F")
+
 ```
 
-## R Markdown
 
-This isn't not an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+hist(log(df$`Annnual Rate`))
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+qqnorm(log(fdf$`Annnual Rate`), ylim=c(0,30))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+table(df$`Full/Part`)
+table(fdf$`Full/Part`)
+```
+
+
+```{r}
+#ggplot(fdf, aes(x = fdf$`Annnual Rate`, y = fdf$Sex, fill = fdf$Sex)) + geom_density_ridges() + theme_ridges() + xlim(0,200)+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5), axis.title.x = element_text(hjust = 0.5), axis.title.y = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+#table(fdf$Agency)
+#str(fdf)
+```
+
+
+```{r}
+dat <- data.frame(table(fdf$`Ethnic Grp`))
+
+dat$fraction = dat$Freq / sum(dat$Freq)
+dat = dat[order(dat$fraction), ]
+dat$ymax = cumsum(dat$fraction)
+dat$ymin = c(0, head(dat$ymax, n = -1))
+names(dat)[1] <- "Eh."
+
+ggplot(dat, aes(fill = dat$Eh., ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) + 
+  geom_rect(colour = "grey30") +
+  coord_polar(theta = "y") + 
+  xlim(c(0, 4)) + 
+  labs(title = "Eh.", fill = "Form") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+counts <- table(fdf$Sex, fdf$`Ethnic Grp`)
+
+barplot(counts, main="Distribution of Gender Across Ethnicity",
+  xlab="Ethnicity", ylab = "Frequency", col=c("pink","blue"),
+  legend = rownames(counts), beside=TRUE)
+```
+
+
+```{r}
+#ggplot(data=fdf, aes(x=fdf$`Ethnic Grp`, y=mean(fdf$`Tot Gross`), fill=fdf$Sex)) + geom_bar(stat="identity", position=position_dodge())
+
+```
+
+
+```{r}
+hist(fdf$Age)
+```
+
+
+
+
+```{r}
+hist(log(fdf$`Annnual Rate`))
+#plot(log(fdf$`Annnual Rate`),fdf$Age)
+```
+
+
+```{r}
+cor.test(fdf$Age, fdf$`Annnual Rate`)
+```
+
+
+
+
+```{r}
+summary(lm(fdf$Age ~ fdf$`Salaries & Wages`))
+```
+
